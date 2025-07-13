@@ -1,6 +1,25 @@
--- dump_table.sql
-SELECT * FROM table_name LIMIT 100;
+-- GIT BASH: Get project file tree structure for LLM - requires Tree for Git Bash
+tree -L 3 -I 'node_modules|vendor|test_*' > structure.txt
 
--- recreate_table.sql
-CREATE TABLE new_table AS
-SELECT * FROM old_table WHERE 1=0;
+
+
+-- GIT BASH:  Get SQL database structure
+mysqldump -u root -p --no-data houseofmalt_operations > schema.sql
+
+
+
+-- GIT BASH: Get SQL database structure for LLM - ctrl+v
+mysql -u root -p -N -e "
+SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'your_table_here'
+ORDER BY TABLE_NAME, ORDINAL_POSITION;" |
+awk '{
+  if ($1 != table) {
+    if (NR != 1) print "";
+    table = $1;
+    print table;
+    print gensub(/./, "-", "g", table);
+  }
+  printf "%-30s %s\n", $2, $3;
+}'
